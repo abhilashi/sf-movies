@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Movies Admin</title>
+    <!-- To CDN or not to CDN.. -->
+    <link rel="stylesheet" href="/static/ext/bootstrap-3.3.4/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="/static/css/admin.css"/>
+</head>
+<body>
+<div id="admin-container">
+    <div id="main">
+        <form class="form-horizontal" action="/admin/upload" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="city" class="col-sm-3 control-label">City</label>
+                <div class="col-sm-9">
+                    <input type="text" class="form-control" name="city" id="city" placeholder="San Francisco, CA">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="csv" class="col-sm-3 control-label">CSV Dump</label>
+                <div class="col-sm-9">
+                    <input type="file" name="csv" id="csv">
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-3 col-sm-9">
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

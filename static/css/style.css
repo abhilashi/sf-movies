@@ -1,0 +1,218 @@
+html, body, #map-canvas { height: 100%; margin: 0; padding: 0;}
+
+div#main {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+}
+
+div#main > div {
+    float: left;
+}
+
+div#listing {
+    width: 400px;
+    height: 100%;
+    position: relative;
+}
+
+div#search-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 5px;
+    height: 70px;
+    background: #ffffff;
+    box-shadow: 2px 1px 2px 2px #bbb;
+    z-index: 2000;
+}
+
+div#tiles {
+    height: 100%;
+    padding-top: 70px;
+    overflow-y: scroll;
+    max-height: 100%;
+}
+
+.grey {
+    background: #DAD9D9;
+}
+
+.white {
+    background: #ffffff;
+}
+
+.inner-tile {
+    width: 100%;
+    height: 100%;
+}
+
+img.tile-sview {
+    height: 100px;
+    width: 100px;
+    float: left;
+    cursor: pointer;
+}
+
+.tile-poster {
+    float: right;
+    height: 80px;
+    width: 50px;
+    cursor: pointer;
+    box-shadow: 0 0 1px 1px #ddd;
+}
+
+.tile-poster > img {
+    height: 60px;
+    width: 100%;
+}
+
+.tile-poster > button.more {
+    height: 20px;
+    width: 100%;
+    border: none;
+    background: #fff;
+}
+
+div.tile-description {
+    width: 280px;
+    height: 100px;
+    margin-left: 100px;
+    padding: 10px;
+    position: relative;
+    font-size: 0.9em;
+}
+
+input#search {
+    width: 270px;
+    margin-left: 10px;
+    margin-top: 5px;
+    height: 40px;
+    padding-left: 10px;
+    border-radius: 0;
+}
+
+select#city {
+    height: 40px;
+    vertical-align: bottom;
+    width: 60px;
+    margin-left: 25px;
+}
+
+.groove {
+    padding: 5px 10px;
+}
+
+.inner-tile {
+    box-shadow: 0 1px 2px 2px #bbb;
+    -moz-box-shadow: 0 1px 2px 2px #bbb;
+    -webkit-box-shadow: 0 1px 2px 2px #bbb;
+}
+
+.highlight {
+    border: 2px solid #55ACEE;
+}
+
+.release_date {
+    position: absolute;
+    bottom: 10px;
+}
+
+div#movie-details {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px;
+    display: none;
+    z-index: 100000;
+    background: #DAD9D9;
+    opacity: 1;
+    overflow-x: hidden;
+}
+
+span.back {
+    cursor: pointer;
+    display: block;
+}
+
+img.movie-poster {
+    width: 150px;
+    height: 150px;
+}
+
+div.movie-title {
+    display: inline-block;
+    vertical-align: top;
+}
+
+.details-groove {
+    padding: 10px;
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+    position: relative;
+    background: #fff;
+}
+
+div.actor {
+    width: 80px;
+    display: inline-block;
+    margin-left: 5px;
+    line-height: 12px;
+    text-align: center;
+    vertical-align: top;
+}
+
+img.actor-profile {
+    height: 80px;
+    width: 80px;
+}
+
+img.imdb {
+    width: 50px;
+}
+
+a.imdb-link {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+div#suggestions {
+    width: 310px;
+    border: 1px solid #ccc;
+    margin-left: 40px;
+    margin-top: 5px;
+    background: #fff;
+    padding: 10px 0;
+}
+
+div.suggestion {
+    min-height: 30px;
+    line-height: 30px;
+    cursor: pointer;
+    font-size: 0.9em;
+    padding: 0 20px;
+}
+
+div.suggestion:hover {
+    background: royalblue;
+    color: #FAFAFA;
+}
+
+div.suggestion > span {
+    width: 30px;
+    text-align: center;
+    line-height: 30px;
+    margin-right: 10px;
+}
+
+#city-name {
+    display: block;
+    margin-left: 25px;
+    color: green;
+    line-height: 10px;
+    margin-top: 5px;
+}
