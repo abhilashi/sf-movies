@@ -123,6 +123,7 @@ class LocationTask(webapp.RequestHandler):
         location = db.GeoPt(location_dict['lat'], location_dict['lng'])
         formatted_name = response.get('formatted_name') or '%s, %s' % (data['Locations'], city_formatted_name)
 
+        movie_id = self.request.get('movie_id')
         loc = locations.Location(
             key_name=place_id,
             location=location,
@@ -133,13 +134,30 @@ class LocationTask(webapp.RequestHandler):
             lower_formatted_name=formatted_name.lower(),
             place_types=response.get('place_types', []),
             place_dump=json.dumps(response),
-            movie_id=self.request.get('movie_id'),
+            movie_id=movie_id,
             movie_title=self.request.get('movie_title'),
             movie_release_date=self.request.get('movie_release_date'),
             movie_poster_path=self.request.get('movie_poster_path')
         )
         loc.update_location()
         loc.put()
+
+        @db.transactional()
+        def update_movie_locations():
+            movie = movies.Movie.get_by_key_name(movie_id)
+            cl = json.loads(movie.city_locations or '{}')
+            if city in cl:
+                cl[city].append({'lat': location.lat, 'lng': location.lon, 'id': place_id})
+            else:
+                cl[city] = [{'lat': location.lat, 'lng': location.lon, 'id': place_id}]
+            movie.city_locations = json.dumps(cl)
+
+            cities = set(movie.cities)
+            cities.add(city)
+            movie.cities = list(cities)
+            movie.put()
+
+        update_movie_locations()
 
 
 @router('/person')

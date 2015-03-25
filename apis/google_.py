@@ -6,7 +6,7 @@ import urllib
 from google.appengine.api import urlfetch
 
 GEOCODE_API_URL = 'https://maps.googleapis.com/maps/api/geocode/json'
-SERVER_API_KEY = 'AIzaSyBui1zKBkBEpmAGe6pf_dc0gz3TGKWZCdU'
+SERVER_API_KEY = 'AIzaSyCBAbIKqhL4OYc-xsVLTz7ft8lwzKgS_hQ'
 BROWSER_API_KEY = 'AIzaSyA1r_ROLa-lH6WzTz_sMuzBVyOXFKShKw8'
 
 

@@ -181,12 +181,13 @@ a.imdb-link {
 }
 
 div#suggestions {
-    width: 310px;
+    width: 270px;
     border: 1px solid #ccc;
-    margin-left: 40px;
-    margin-top: 5px;
+    margin-left: 100px;
+    margin-top: -10px;
     background: #fff;
-    padding: 10px 0;
+    padding: 20px 0 10px;
+    position: absolute;
 }
 
 div.suggestion {
@@ -215,4 +216,19 @@ div.suggestion > span {
     color: green;
     line-height: 10px;
     margin-top: 5px;
+}
+
+#search-note {
+    position: absolute;
+    top: 5px;
+    left: 10px;
+}
+
+#clear-highlight {
+    position: absolute;
+    right: 25px;
+    bottom: 0;
+    color: blue;
+    text-decoration: underline;
+    cursor: pointer;
 }

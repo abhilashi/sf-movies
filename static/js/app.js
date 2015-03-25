@@ -1,11 +1,8 @@
 $(document).ready(function () {
     'use strict';
 
+    var DEFAULT_ZOOM = 15;
     var active_markers = [];
-    var all_markers = [];
-    var movie_markers = {}; // Mapping from movie id to array of markers
-    var location_marker = {}; // Mapping from place id to marker
-
     var $window = $(window);
 
     // Backbone
@@ -20,14 +17,6 @@ $(document).ready(function () {
                 icon: 'http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=' + (obj.idx + 1) + '|FE7569'
             });
             this.marker.idx = obj.idx + 1;
-
-            if(movie_markers.hasOwnProperty(obj.movie_id)){
-                movie_markers[obj.movie_id].push(this.marker);
-            } else {
-                movie_markers[obj.movie_id] = [this.marker];
-            }
-            location_marker[this.id] = this.marker;
-            all_markers.push(this.marker);
         },
         destroy: function () {
             this.marker.setMap(null);
@@ -42,7 +31,12 @@ $(document).ready(function () {
             clearTimeout(this.fetchTimeout);
             var that = this;
             this.fetchTimeout = setTimeout(function () {
-                that.fetch({reset: true});
+                that.fetch({
+                    reset: true,
+                    success: function(){
+                        dispatcher.trigger('LocationList:load');
+                    }
+                });
                 that.fetchTimeout = null;
             }, 500);
         },
@@ -57,9 +51,6 @@ $(document).ready(function () {
                 }
             });
             active_markers = [];
-            all_markers = [];
-            movie_markers = {};
-            location_marker = {};
             Backbone.Collection.prototype.reset.apply(this, arguments);
         }
     });
@@ -71,7 +62,7 @@ $(document).ready(function () {
         template: _.template($('#location-tile').html()),
         events: {
             'click .tile-poster': 'invokeMovieDetails',
-            'click .tile-sview': 'updateState'
+            'click': 'updateState'
         },
         initialize: function () {
             this.listenTo(this.model, 'change', this.render);
@@ -79,9 +70,8 @@ $(document).ready(function () {
 
             this.marker = this.model.marker;
             this.marker.view = this;
-            var that = this;
-            google.maps.event.addListener(this.marker, 'click', this.updateState.bind(this));
 
+            google.maps.event.addListener(this.marker, 'click', this.updateState.bind(this));
             dispatcher.on('ListView:scroll', this.setStreetView, this);
         },
         render: function () {
@@ -135,15 +125,27 @@ $(document).ready(function () {
                 active_markers.splice(idx[i], 1);
             }
         },
-        invokeMovieDetails: function(){
+        setCenter: function(){
+            initializeMap({
+                center: this.location,
+                zoom: DEFAULT_ZOOM
+            });
+        },
+        invokeMovieDetails: function(ev){
             var movie_id = this.model.toJSON()['movie_id'];
             var movie = new Movie({id: movie_id});
             movie.fetch({
-                success: function(){
+                data: {city: Cities.selectedCity.id},
+                success: function(data){
                     var movieView = new MovieView({model: movie});
                     movieView.render();
+
+                    // Purely for highlighting purposes
+                    var movieSuggestion = new MovieSuggestion(data.attributes);
+                    movieSuggestion.select();
                 }
             });
+            ev.stopPropagation();
         }
     });
 
@@ -186,14 +188,76 @@ $(document).ready(function () {
         el: $('#movie-details'),
         template: _.template($('#movie-template').html()),
         render: function(){
-            updateMovieMarkers(this.model.id, true);
             this.$el.html(this.template(this.model.toJSON()));
             this.$el.show();
         },
         close: function(){
-            updateMovieMarkers(this.model.id, false);
             this.$el.empty().hide();
         }
+    });
+
+    var MovieSuggestion = Backbone.Model.extend({
+        initialize: function(obj){
+            this.id = obj.identifier;
+            this.bbox = obj.bbox;
+            this.locations = obj.locations;
+        },
+        select: function(){
+            var currentBBox = map.getBounds();
+            var newNE = new google.maps.LatLng(this.bbox.ne.lat, this.bbox.ne.lng);
+            var newSW = new google.maps.LatLng(this.bbox.sw.lat, this.bbox.sw.lng);
+            var newBBox = new google.maps.LatLngBounds(newSW, newNE);
+            if(currentBBox.contains(newBBox.getNorthEast()) && currentBBox.contains(newBBox.getSouthWest())){
+                for(var i=0; i<this.locations.length; i++){
+                    var l = Locations.get(this.locations[i]);
+                    if(l){
+                        l.marker.view.highlight();
+                    }
+                }
+            } else {
+                dispatcher.once('LocationList:load', function(){
+                    for(var i=0; i<this.locations.length; i++){
+                        var l = Locations.get(this.locations[i]);
+                        if(l){
+                            l.marker.view.highlight();
+                        }
+                    }
+                }, this);
+                map.fitBounds(newBBox);
+            }
+        }
+    });
+
+    var MovieSuggestions = Backbone.Collection.extend({
+        model: MovieSuggestion
+    });
+
+    var LocationSuggestion = Backbone.Model.extend({
+        initialize: function(obj){
+            this.id = obj.identifier;
+            this.lat = obj.lat;
+            this.lng = obj.lng;
+        },
+        select: function(){
+            var currentCenter = map.getCenter();
+            if(this.lat == currentCenter.lat() && this.lng == currentCenter.lng()){
+                var loc = Locations.get(this.id);
+                loc.marker.view.highlight();
+            } else {
+                dispatcher.once('LocationList:load', function(){
+                    var loc = Locations.get(this.id);
+                    if(loc){
+                        loc.marker.view.highlight();
+                    }
+                }, this);
+                var newCenter = new google.maps.LatLng(this.lat, this.lng);
+                map.setCenter(newCenter);
+            }
+        }
+    });
+
+    var LocationSuggestions = Backbone.Collection.extend({
+        model: LocationSuggestion
     });
 
     var SuggestionsView = Backbone.View.extend({
@@ -221,10 +285,15 @@ $(document).ready(function () {
             var that = this;
             $.ajax({
                 url:"/json/search",
-                data: {q: query},
+                data: {
+                    q: query,
+                    city: Cities.selectedCity.id
+                },
                 success:function(result){
                     if(result.movies.length || result.locations.length){
                         that.$el.html(that.template(result));
+                        that.movies = new MovieSuggestions(result.movies);
+                        that.locations = new LocationSuggestions(result.locations);
                         that.$el.show();
                     } else {
                         that.$el.hide();
@@ -233,11 +302,12 @@ $(document).ready(function () {
             });
         },
         highlightMovie: function(ev){
-            updateMovieMarkers(ev.currentTarget.id, true);
+            var movie = this.movies.get(ev.currentTarget.id);
+            movie.select();
         },
         highlightLocation: function(ev){
-            var m = Locations.get(ev.currentTarget.id);
-            m.marker.view.updateState();
+            var location = this.locations.get(ev.currentTarget.id);
+            location.select();
         }
     });
 
@@ -266,7 +336,7 @@ $(document).ready(function () {
         select: function(){
             initializeMap({
                 center: this.location,
-                zoom: 15
+                zoom: DEFAULT_ZOOM
             });
             $('#city-name').text(this.name);
         }
@@ -276,6 +346,13 @@ $(document).ready(function () {
         model: City,
         url: function(){
             return '/json/cities';
+        },
+        select: function(city_id){
+            var city = Cities.get(city_id);
+            if(city){
+                city.select();
+                this.selectedCity = city;
+            }
         }
     });
 
@@ -294,13 +371,7 @@ $(document).ready(function () {
             this.$el.html(this.template({'cities': Cities.toJSON()}));
         },
         select: function(ev){
-            this.changeCity(this.$el.val());
-        },
-        changeCity: function(city_id){
-            var city = Cities.get(city_id);
-            if(city){
-                city.select();
-            }
+            Cities.select(this.$el.val());
         }
     });
 
@@ -308,29 +379,20 @@ $(document).ready(function () {
     Cities.fetch({
         reset: true,
         success: function(){
-            Cities.first().select();
+            Cities.select(Cities.first().id);
         }
     });
 
-    function updateMovieMarkers(movie_id, highlight){
-        if(!movie_markers.hasOwnProperty(movie_id)){
-            return;
-        }
-        for(var i=0; i<movie_markers[movie_id].length; i++){
-            if(highlight){
-                movie_markers[movie_id][i].view.highlight();
-            } else {
-                movie_markers[movie_id][i].view.nohighlight();
-            }
+    function clearHighlighting(){
+        while(active_markers.length){
+            active_markers[0].view.nohighlight();
         }
     }
 
-    function updateLocationMarker(location_id){
-        var lm = location_marker[location_id];
-        if(lm){
-            lm.view.updateState();
-        }
-    }
+    $('#clear-highlight').on('click', function(e){
+        clearHighlighting();
+        e.preventDefault();
+    });
 
     // Google Maps
     var map;

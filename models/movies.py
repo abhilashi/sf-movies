@@ -1,7 +1,9 @@
 """Models to store data pertaining to individual movies, retrieved through themoviedb.org and admin uploads"""
-from apis.tmdb import RESOURCE_URL
+import json
 
 from google.appengine.ext import db
+
+from apis.tmdb import RESOURCE_URL
 
 
 class Person(db.Model):
@@ -33,6 +35,9 @@ class Movie(db.Model):
     director = db.StringProperty()  # TMDB id tied to people
     writers = db.StringListProperty()  # TMDB ids tied to people - max 4
 
+    cities = db.StringListProperty(default=[], indexed=True)  # The list of city ids associated with this movie
+    city_locations = db.TextProperty(default='{}')  # JSON mapping city ids to array of location ids
+
     tmdb_dump = db.TextProperty()  # TMDB is definitely not for real time requests
 
     def as_dict(self):
@@ -47,5 +52,7 @@ class Movie(db.Model):
             'overview': self.overview,
             'cast': self.cast,
             'director': self.director,
-            'writers': self.writers
+            'writers': self.writers,
+            'cities': sorted(self.cities),
+            'city_locations': json.loads(self.city_locations)
         }

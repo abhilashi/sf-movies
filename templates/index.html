@@ -23,11 +23,12 @@
     <div id="listing">
         <div id="movie-details"></div>
         <div id="search-wrapper">
-            <form class="form-inline">
+            <form class="form-inline" onsubmit="return false;">
                 <select class="form-control" id="city"></select>
                 <input type="text" placeholder="Search" id="search" class="form-control"/>
                 <small id="city-name"></small>
             </form>
+            <small><a id="clear-highlight">Clear Selection</a></small>
             <div id="suggestions"></div>
         </div>
         <div id="tiles" class="grey"></div>
@@ -41,7 +42,7 @@
             <img src="<%=movie_poster%>"/>
             <button class="more"><i class="fa fa-ellipsis-h fa-lg"></i></button>
         </div>
-        <span><%=short_name%></span><br/><small>Movie: </small> <span><%=movie_title%></span><br/>
+        <span><%=idx+1%>. <%=short_name%></span><br/><small>Movie: </small> <span><%=movie_title%></span><br/>
         <small class="release_date">Released: <%=movie_release_date%></small>
     </div>
 </div>
@@ -75,11 +76,12 @@
     </div>
 </script>
 <script type="text/template" id="search-template">
+    <small id="search-note" class="text-muted">**Note: Suggestions limited to selected city.</small>
     <% for(var i=0; i<movies.length; i++) {%>
     <div class="movie suggestion" id="<%=movies[i].identifier%>"><span><i class="fa fa-film fa-lg"></i></span><%=movies[i].title%></div>
     <% } %>
     <% for(var i=0; i<locations.length; i++) {%>
-    <div class="location suggestion" id="<%=locations[i].identifier%>"><span><i class="fa fa-map-marker fa-lg"></i></span><%=locations[i].formatted_name%></div>
+    <div class="location suggestion" id="<%=locations[i].identifier%>"><span><i class="fa fa-map-marker fa-lg"></i></span><%=locations[i].short_name%></div>
     <% } %>
 </script>
 <script type="text/template" id="city-template">
